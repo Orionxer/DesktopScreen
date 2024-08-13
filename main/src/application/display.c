@@ -3,8 +3,9 @@
 #include <stdlib.h>
 
 #include "display.h"
+#include "debug_log.h"
 
 void display_task_init(void)
 {
-    printf("Init Display Task Here\n");
+    DBG_LOGI("Init Display Task Here");
 }
