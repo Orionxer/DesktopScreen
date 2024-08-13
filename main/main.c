@@ -10,6 +10,9 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
+#include "bsp_gpio.h"
+#include "display.h"
+
 // 项目名称
 #define PROJECT_NAME "\n\x1b[33m ____ ____ ____ ____ ____ ____ ____ ____ ____ ____ ____ ____ ____ \n||D |||e |||s |||k |||t |||o |||p |||S |||c |||r |||e |||e |||n ||\n||__|||__|||__|||__|||__|||__|||__|||__|||__|||__|||__|||__|||__||\n|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|\n\x1b[0m\n"
 // 日志系统
@@ -115,6 +118,8 @@ void app_main(void)
     DBG_LOGI("Wecome to DesktopScreen");
     DBG_LOGW("Wecome to DesktopScreen");
     DBG_LOGE("Wecome to DesktopScreen");
+    touch_gpio_init();
+    display_task_init();
     while (1)
     {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
