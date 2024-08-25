@@ -34,17 +34,12 @@ void app_main(void)
 {
     printf(PROJECT_NAME);
     print_log_demo();
-    touch_gpio_init();
-    set_tp_rst_level(0);
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-    set_tp_rst_level(1);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-    touch_i2c_init();
     touch_ft6336_init();
     display_task_init();
     while (1)
     {
         vTaskDelay(100 / portTICK_PERIOD_MS);
+        // get_ft6336_touch_sta(&position);
         // test_toggle_pin();
         // print_task_stack_info();
     }
