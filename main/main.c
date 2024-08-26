@@ -33,7 +33,7 @@
 void app_main(void)
 {
     printf(PROJECT_NAME);
-    print_log_demo();
+    // print_log_demo();
     touch_ft6336_init();
     display_task_init();
     while (1)

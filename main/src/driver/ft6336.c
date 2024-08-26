@@ -72,27 +72,31 @@ static void scan_ft6336()
         }
     }
 }
-//转换为实际位置
+
+/**
+ * @brief   转换为实际位置
+ * @param   position 
+ * @note    FT6336U最多支持两点触控
+ */
 static void count_position_ft6336(TP_POSITION_T *position){
 	// printf("------count_position_ft6336 %d------\n",gTPS.touch_count);
+    // 触摸点个数
     switch(gTPS.touch_count)
 	{
 		case 1:		
-        	// printf("x=%d y=%d\n",gTPS.x[0],gTPS.y[0]);
-			if((gTPS.x[0]!=0)&&(gTPS.y[0]!=0)
-			&&(gTPS.x[0]<200)&&(gTPS.y[0]<200))//软件滤掉无效操作
+        	DBG_LOGD("x = %d, y = %d", gTPS.x[0], gTPS.y[0]);
+            //软件滤掉无效操作
+			if((gTPS.x[0]<200) && (gTPS.y[0]<200))
 			{
-				//To 152x152
-				gTPS.x[0]=gTPS.x[0]*152/200; 
-				gTPS.y[0]=gTPS.y[0]*152/200;
 				position->status = 1;
 				position->x = gTPS.x[0];
 				position->y = gTPS.y[0];
-				/******调试使用****/		
-                printf("触摸点个数=%d\r\n",gTPS.touch_count);	//FT6336U最多支持两点触控
-                printf("x0:%d,y0:%d\r\n",gTPS.x[0],gTPS.y[0]);
 				return;
 			}
+            else
+            {
+                DBG_LOGW("Invalid Touch, x = %d, y = %d", position->x, position->y);
+            }
 			break;
 	    case 2:
 			if((gTPS.x[0]!=0)&&(gTPS.y[0]!=0)
@@ -106,12 +110,13 @@ static void count_position_ft6336(TP_POSITION_T *position){
 				gTPS.x[1]=gTPS.x[1]*152/200; 
 				gTPS.y[1]=gTPS.y[1]*152/200;	
 				/******调试使用****/
-				printf("触摸点个数：:%d\r\n",gTPS.touch_count);	//FT6336U最多支持两点触控
-				printf("x0:%d,y0:%d\r\n",gTPS.x[0],gTPS.y[0]);
-				printf("x1:%d,y1:%d\r\n",gTPS.x[1],gTPS.y[1]);
+				// printf("触摸点个数：:%d\r\n",gTPS.touch_count);	//FT6336U最多支持两点触控
+				// printf("x0:%d,y0:%d\r\n",gTPS.x[0],gTPS.y[0]);
+				// printf("x1:%d,y1:%d\r\n",gTPS.x[1],gTPS.y[1]);
 			}
 			break;					
 		default:
+            DBG_LOGW("Invalid Touch point = %d", gTPS.touch_count);
 			break;						
 	}
     for(int i=0;i<2;i++)
