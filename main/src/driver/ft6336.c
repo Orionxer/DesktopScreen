@@ -23,11 +23,54 @@ TouchPoint_T gTPS;
 static void scan_ft6336()
 {
     uint8_t i = 0;
+    uint8_t sta = 0;
     uint8_t buf[4] = {0};
+    uint8_t gestid = 0;
     // 读取触摸点的状态
-    ESP_ERROR_CHECK(touch_i2c_write_read(0x02, buf, 1));
-    gTPS.touch_count = buf[0];
-    DBG_LOGI("Touch Point Number = %d", gTPS.touch_count);
+    ESP_ERROR_CHECK(touch_i2c_write_read(0x02, &sta, 1));
+    ESP_ERROR_CHECK(touch_i2c_write_read(0x01, &gestid, 1));
+    gTPS.touch_count = sta;
+    // 最大支持两点触摸
+    // DBG_LOGI("Touch Point Number = %d", gTPS.touch_count);
+    // 判断是否有触摸点按下，0x02寄存器的低4位表示有效触点个数
+    if (sta & 0x0f)
+    {
+        //~(0xFF << (sta & 0x0F))将点的个数转换为触摸点按下有效标志
+        gTPS.touch_sta = ~(0xFF << (sta & 0x0F));
+        // 分别判断触摸点1-5是否被按下
+        for (i = 0; i < 2; i++)                   
+        {
+            // 读取触摸点坐标
+            if (gTPS.touch_sta & (1 << i))                        
+            {                                                     
+                // 读取被按下则读取对应触摸点XY坐标值
+                ESP_ERROR_CHECK(touch_i2c_write_read(FT6236_TPX_TBL[i], buf, 4));
+                gTPS.x[i] = ((uint16_t)(buf[0] & 0X0F) << 8) + buf[1];
+                gTPS.y[i] = ((uint16_t)(buf[2] & 0X0F) << 8) + buf[3];
+                // printf("%x %x %x %x x=%d y=%d\n",buf[0],buf[1],buf[2],buf[3],gTPS.x[i],gTPS.y[i]);
+                // if((buf[0]&0XC0)!=0X80)
+                // {
+                // 	gTPS.x[i]=gTPS.y[i]=0;//必须是contact事件，才认为有效
+                // 	gTPS.touch_sta &=0xe0;	//清除触摸点有效标记
+                // 	return;
+                // }
+            }
+        }
+        gTPS.touch_sta |= TP_PRES_DOWN; // 触摸按下标记
+    }
+    else
+    {
+        if (gTPS.touch_sta & TP_PRES_DOWN) // 之前是被按下的
+        {
+            gTPS.touch_sta &= ~0x80;       // 触摸松开标记
+        }
+        else
+        {
+            gTPS.x[0] = 0;
+            gTPS.y[0] = 0;
+            gTPS.touch_sta &= 0xe0; // 清除触摸点有效标记
+        }
+    }
 }
 //转换为实际位置
 static void count_position_ft6336(TP_POSITION_T *position){
@@ -84,7 +127,7 @@ static void count_position_ft6336(TP_POSITION_T *position){
 void get_ft6336_touch_sta(TP_POSITION_T *position)
 {
     scan_ft6336();
-    // count_position_ft6336(position);
+    count_position_ft6336(position);
 }
 
 void touch_ft6336_init(void)
