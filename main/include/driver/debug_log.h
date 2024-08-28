@@ -37,7 +37,19 @@
  * @note    2. 假设 指定的打印等级 = DBG_LOG_WARNING,
  *          则只会打印 DBG_LOG_WARNING 和 DBG_LOG_ERROR两个等级的信息
 */
-#define DBG_LOG_LEVEL       DBG_LOG_WARNING
+#define DBG_LOG_LEVEL       DBG_LOG_DEBUG
+
+/**
+ * @brief   输出的等级从高到低的排序: [错误] > [警告] > [普通] > [调试]
+*/
+// [错误]输出等级 
+#define DBG_LOG_ERROR       1
+// [警告]输出等级
+#define DBG_LOG_WARNING     2
+// [普通]输出等级
+#define DBG_LOG_INFO        3
+// [调试]输出等级
+#define DBG_LOG_DEBUG       4
 
 #define ANSI_COLOR_RED      "\x1b[31m"
 #define ANSI_COLOR_GREEN    "\x1b[32m"

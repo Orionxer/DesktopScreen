@@ -10,6 +10,10 @@
 #include "debug_log.h"
 #include "ft6336.h"
 
+/******************************************************
+ * @brief   触摸相关GPIO
+ *****************************************************/
+
 // 触摸 输出引脚（复位）
 #define GPIO_OUTPUT_TP_RST    5
 #define GPIO_OUTPUT_TP_RST_PIN_SEL  (1ULL<<GPIO_OUTPUT_TP_RST)
@@ -98,12 +102,12 @@ void touch_gpio_init(void)
     DBG_LOGI("Minimum free heap size: %"PRIu32" bytes", esp_get_minimum_free_heap_size());
 }
 
-void test_toggle_pin(void)
-{
-    DBG_LOGI("Do nothing");
-}
-
 void set_tp_rst_level(uint8_t level)
 {
     gpio_set_level(GPIO_OUTPUT_TP_RST, level);
 }
+
+
+/******************************************************
+ * @brief   屏幕相关GPIO
+ *****************************************************/

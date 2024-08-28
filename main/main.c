@@ -13,7 +13,9 @@
 #include "debug_log.h"
 #include "bsp_gpio.h"
 #include "bsp_i2c.h"
+#include "bsp_spi.h"
 #include "ft6336.h"
+#include "screen.h"
 #include "display.h"
 
 /******************************************************
@@ -35,6 +37,8 @@ void app_main(void)
     printf(PROJECT_NAME);
     // print_log_demo();
     touch_ft6336_init();
+    lcd_spi_master_init();
+    screen_init();
     display_task_init();
     while (1)
     {
