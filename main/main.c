@@ -37,7 +37,6 @@ void app_main(void)
     printf(PROJECT_NAME);
     // print_log_demo();
     touch_ft6336_init();
-    lcd_spi_master_init();
     screen_init();
     display_task_init();
     while (1)

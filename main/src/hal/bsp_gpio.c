@@ -111,3 +111,74 @@ void set_tp_rst_level(uint8_t level)
 /******************************************************
  * @brief   屏幕相关GPIO
  *****************************************************/
+//屏幕片选 0-有效
+#define SCREEN_GPIO_OUTPUT_CS 27
+#define SCREEN_GPIO_OUTPUT_CS_SEL ((1ULL<<SCREEN_GPIO_OUTPUT_CS))
+//屏幕数据/指令选择 1-data 0-cmd
+#define SCREEN_GPIO_OUTPUT_DC 14
+#define SCREEN_GPIO_OUTPUT_DC_SEL ((1ULL<<SCREEN_GPIO_OUTPUT_DC))
+//屏幕复位 0-reset
+#define SCREEN_GPIO_OUTPUT_RES 12
+#define SCREEN_GPIO_OUTPUT_RES_SEL ((1ULL<<SCREEN_GPIO_OUTPUT_RES))
+//屏幕状态 1-busy 
+#define SCREEN_GPIO_INTPUT_BUSY 13
+#define SCREEN_GPIO_INTPUT_BUSY_SEL ((1ULL<<SCREEN_GPIO_INTPUT_BUSY))
+
+void screen_gpio_init(void)
+{
+    // zero-initialize the config structure.
+    gpio_config_t io_conf = {};
+    // disable interrupt
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    // set as output mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    // bit mask of the pins that you want to set
+    io_conf.pin_bit_mask = SCREEN_GPIO_OUTPUT_CS_SEL;
+    // disable pull-down mode
+    io_conf.pull_down_en = 0;
+    // disable pull-up mode
+    io_conf.pull_up_en = 0;
+    // configure GPIO with the given settings
+    gpio_config(&io_conf);
+
+    //bit mask of the pins that you want to set,e.g.GPIO18/19
+    io_conf.pin_bit_mask = SCREEN_GPIO_OUTPUT_DC_SEL;
+    //configure GPIO with the given settings
+    gpio_config(&io_conf);
+
+    //bit mask of the pins that you want to set,e.g.GPIO18/19
+    io_conf.pin_bit_mask = SCREEN_GPIO_OUTPUT_RES_SEL;
+    //configure GPIO with the given settings
+    gpio_config(&io_conf);
+
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    //bit mask of the pins, use GPIO4/5 here
+    io_conf.pin_bit_mask = SCREEN_GPIO_INTPUT_BUSY_SEL;
+    //set as input mode    
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = 1;
+    gpio_config(&io_conf);
+
+}
+
+void ds_gpio_set_screen_cs(uint32_t level)
+{
+    gpio_set_level(SCREEN_GPIO_OUTPUT_CS, level);
+}
+
+void ds_gpio_set_screen_dc(uint32_t level)
+{
+    gpio_set_level(SCREEN_GPIO_OUTPUT_DC, level);
+}
+
+void ds_gpio_set_screen_rst(uint32_t level)
+{
+    gpio_set_level(SCREEN_GPIO_OUTPUT_RES, level);
+}
+
+int ds_gpio_get_screen_busy()
+{
+    return gpio_get_level(SCREEN_GPIO_INTPUT_BUSY);
+}
+
