@@ -4,6 +4,14 @@
 #include "bsp_gpio.h"
 #include "debug_log.h"
 
+#ifdef CONFIG_IDF_TARGET_ESP32
+    #define MY_SPI_HOST HSPI_HOST
+#elif defined(CONFIG_IDF_TARGET_ESP32S3)
+    #define MY_SPI_HOST SPI3_HOST
+#else
+    #error "Unsupported target"
+#endif
+
 #define PIN_NUM_MISO 23
 #define PIN_NUM_MOSI 26
 #define PIN_NUM_CLK  25
@@ -31,10 +39,10 @@ void screen_spi_master_init(void)
         // .pre_cb=spi_pre_transfer_callback,  //Specify pre-transfer callback to handle D/C line
     };
     // Initialize the SPI bus
-    ret = spi_bus_initialize(HSPI_HOST, &buscfg, 0);
+    ret = spi_bus_initialize(MY_SPI_HOST, &buscfg, 0);
     ESP_ERROR_CHECK(ret);
     // Attach the LCD to the SPI bus
-    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    ret = spi_bus_add_device(MY_SPI_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
 }
 

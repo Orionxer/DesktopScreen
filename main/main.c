@@ -16,6 +16,7 @@
 #include "bsp_spi.h"
 #include "ft6336.h"
 #include "screen.h"
+#include "buzzer.h"
 #include "display.h"
 
 /******************************************************
@@ -36,9 +37,10 @@ void app_main(void)
 {
     printf(PROJECT_NAME);
     // print_log_demo();
-    touch_ft6336_init();
-    screen_init();
-    display_task_init();
+    // touch_ft6336_init();
+    // screen_init();
+    // display_task_init();
+    buzzer_init();
     while (1)
     {
         vTaskDelay(100 / portTICK_PERIOD_MS);
