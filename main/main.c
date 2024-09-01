@@ -37,13 +37,13 @@ void app_main(void)
 {
     printf(PROJECT_NAME);
     // print_log_demo();
-    // touch_ft6336_init();
-    // screen_init();
+    touch_ft6336_init();
+    screen_init();
     // display_task_init();
-    buzzer_init();
+    // buzzer_init();
     while (1)
     {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
         // get_ft6336_touch_sta(&position);
         // test_toggle_pin();
         // print_task_stack_info();
