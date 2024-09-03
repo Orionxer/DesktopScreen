@@ -5,6 +5,7 @@
 #include "debug_log.h"
 #include "bsp_gpio.h"
 #include "esp_err.h"
+#include "screen.h"
 
 
 //触摸芯片最大5组触摸点，FT6335最大支持双触
@@ -85,6 +86,8 @@ static void count_position_ft6336(TP_POSITION_T *position){
 	{
 		case 1:		
         	DBG_LOGD("x = %d, y = %d", gTPS.x[0], gTPS.y[0]);
+            // ! 测试绘制像素点
+            EPD_Dis_Part(gTPS.x[0], gTPS.y[0], NULL, 8, 8);
             //软件滤掉无效操作
 			if((gTPS.x[0]<200) && (gTPS.y[0]<200))
 			{

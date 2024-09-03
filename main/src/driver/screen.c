@@ -1607,12 +1607,14 @@ void EPD_SetRAMValue_BaseMap( const unsigned char * datas)
 	spi_send_cmd(0x24); // Write Black and White image to RAM
 	for (i = 0; i < EPD_ARRAY; i++)
 	{
-		spi_send_data(datas[i]);
+		// spi_send_data(datas[i]);
+		spi_send_data(0xFF);
 	}
 	spi_send_cmd(0x26); // Write Black and White image to RAM
 	for (i = 0; i < EPD_ARRAY; i++)
 	{
-		spi_send_data(datas[i]);
+		// spi_send_data(datas[i]);
+		spi_send_data(0xFF);
 	}
 	refresh();
 }
@@ -1708,6 +1710,75 @@ void EPD_WhiteScreen_White(void)
 	refresh();
 }
 
+// Partial refresh update function
+void EPD_Part_Update(void)
+{
+	spi_send_cmd(0x22); // Display Update Control
+	spi_send_data(0xFF);
+	spi_send_cmd(0x20); // Activate Display Update Sequence
+	lcd_check_busy();
+}
+
+void part_refresh_all(void)
+{
+	init_display();
+	EPD_SetRAMValue_BaseMap(NULL); //Please do not delete the background color function, otherwise it will cause unstable display during partial refresh.
+}
+
+// Partial refresh display
+void EPD_Dis_Part(unsigned int x_start, unsigned int y_start, const unsigned char *datas, unsigned int PART_COLUMN, unsigned int PART_LINE)
+{
+	unsigned int i;
+	unsigned int x_end, y_end;
+
+	x_start = x_start / 8;				 // x address start
+	x_end = x_start + PART_LINE / 8 - 1; // x address end
+	y_start = y_start;					 // Y address start
+	y_end = y_start + PART_COLUMN - 1;	 // Y address end
+
+    ds_gpio_set_screen_rst(0);		// Module reset
+	vTaskDelay(10 / portTICK_PERIOD_MS);
+	ds_gpio_set_screen_rst(1);
+	vTaskDelay(10 / portTICK_PERIOD_MS);
+	spi_send_cmd(0x3C); // BorderWavefrom,
+	spi_send_data(0x80);
+
+	spi_send_cmd(0x44);			  // set RAM x address start/end
+	spi_send_data(x_start);		  // x address start
+	spi_send_data(x_end);		  // y address end
+	spi_send_cmd(0x45);			  // set RAM y address start/end
+	spi_send_data(y_start % 256); // y address start2
+	spi_send_data(y_start / 256); // y address start1
+	spi_send_data(y_end % 256);	  // y address end2
+	spi_send_data(y_end / 256);	  // y address end1
+
+	spi_send_cmd(0x4E);			  // set RAM x address count to 0;
+	spi_send_data(x_start);		  // x start address
+	spi_send_cmd(0x4F);			  // set RAM y address count to 0X127;
+	spi_send_data(y_start % 256); // y address start2
+	spi_send_data(y_start / 256); // y address start1
+
+	spi_send_cmd(0x24); // Write Black and White image to RAM
+	for (i = 0; i < PART_COLUMN * PART_LINE / 8; i++)
+	{
+		// spi_send_data(datas[i]);
+		// ! 临时测试绘制触摸点
+		spi_send_data(0x00);
+	}
+	static int part_refresh_cnt = 0;
+	if (part_refresh_cnt >= 5)
+	{
+		part_refresh_cnt = 0;
+		// ds_screen_full_display(EPD_WhiteScreen_White);	
+		part_refresh_all();
+	}
+	else
+	{
+		EPD_Part_Update();
+		part_refresh_cnt++;
+	}
+}
+
 void display_test(void)
 {
 #if 0
@@ -1726,29 +1797,30 @@ void display_test(void)
     }
 #else
     vTaskDelay(3000 / portTICK_PERIOD_MS);
-	unsigned char i;
-	init_display();
-	EPD_SetRAMValue_BaseMap(gImage_basemap); // Please do not delete the background color function, otherwise it will cause unstable display during partial refresh.
-	for (i = 0; i < 6; i++)
-	{
-		EPD_Dis_Part_Time(64, 56 + 32 * 0, Num[i],			// x-A,y-A,DATA-A
-						  64, 56 + 32 * 1, Num[0],			// x-B,y-B,DATA-B
-						  64, 56 + 32 * 2, gImage_numdot,	// x-C,y-C,DATA-C
-						  64, 56 + 32 * 3, Num[0],			// x-D,y-D,DATA-D
-						  64, 56 + 32 * 4, Num[1], 32, 64); // x-E,y-E,DATA-E,Resolution 32*64
-	}
+	EPD_SetRAMValue_BaseMap(gImage_basemap); //Please do not delete the background color function, otherwise it will cause unstable display during partial refresh.
+	// unsigned char i;
+	// init_display();
+	// EPD_SetRAMValue_BaseMap(gImage_basemap); // Please do not delete the background color function, otherwise it will cause unstable display during partial refresh.
+	// for (i = 0; i < 6; i++)
+	// {
+	// 	EPD_Dis_Part_Time(64, 56 + 32 * 0, Num[i],			// x-A,y-A,DATA-A
+	// 					  64, 56 + 32 * 1, Num[0],			// x-B,y-B,DATA-B
+	// 					  64, 56 + 32 * 2, gImage_numdot,	// x-C,y-C,DATA-C
+	// 					  64, 56 + 32 * 3, Num[0],			// x-D,y-D,DATA-D
+	// 					  64, 56 + 32 * 4, Num[1], 32, 64); // x-E,y-E,DATA-E,Resolution 32*64
+	// }
 	EPD_DeepSleep();  //Enter the sleep mode and please do not delete it, otherwise it will reduce the lifespan of the screen.
-	vTaskDelay(2000 / portTICK_PERIOD_MS);
-	init_display();					// E-paper initialization
-	EPD_WhiteScreen_White(); //Clear screen function.
-	EPD_Dis_PartAll(gImage_p1);			// Image 1
-	EPD_Dis_PartAll(gImage_p2);			// Image 2
-	EPD_DeepSleep();  //Enter the sleep mode and please do not delete it, otherwise it will reduce the lifespan of the screen.
-	vTaskDelay(2000 / portTICK_PERIOD_MS);
-	init_display();					// E-paper initialization
-	EPD_WhiteScreen_ALL(gImage_1); //To Display one image using full screen refresh.
-	EPD_DeepSleep();  //Enter the sleep mode and please do not delete it, otherwise it will reduce the lifespan of the screen.
-	vTaskDelay(2000 / portTICK_PERIOD_MS);
+	// vTaskDelay(2000 / portTICK_PERIOD_MS);
+	// init_display();					// E-paper initialization
+	// EPD_WhiteScreen_White(); //Clear screen function.
+	// EPD_Dis_PartAll(gImage_p1);			// Image 1
+	// EPD_Dis_PartAll(gImage_p2);			// Image 2
+	// EPD_DeepSleep();  //Enter the sleep mode and please do not delete it, otherwise it will reduce the lifespan of the screen.
+	// vTaskDelay(2000 / portTICK_PERIOD_MS);
+	// init_display();					// E-paper initialization
+	// EPD_WhiteScreen_ALL(gImage_1); //To Display one image using full screen refresh.
+	// EPD_DeepSleep();  //Enter the sleep mode and please do not delete it, otherwise it will reduce the lifespan of the screen.
+	// vTaskDelay(2000 / portTICK_PERIOD_MS);
 #endif
 }
 
@@ -1757,7 +1829,7 @@ void screen_init(void)
     DBG_LOGD("Screen Initializing");
     screen_gpio_init();
     screen_spi_master_init();
-    // ds_screen_full_display(ds_screen_display_white);	
+    ds_screen_full_display(EPD_WhiteScreen_White);	
     display_test();
 }
 
