@@ -18,6 +18,7 @@
 #include "screen.h"
 #include "buzzer.h"
 #include "display.h"
+#include "flash.h"
 #include "wifi_station.h"
 
 /******************************************************
@@ -41,12 +42,14 @@ void app_main(void)
     // touch_ft6336_init();
     // screen_init();
     // display_task_init();
-    // buzzer_init();
+    // // buzzer_init();
+    flash_init();
+    flash_write_single_wifi("My_SSID", "My_SSID");
+    // flash_erase_all();
     wifi_init_station();
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        wifi_read_rssi();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
         // get_ft6336_touch_sta(&position);
         // test_toggle_pin();
         // print_task_stack_info();
