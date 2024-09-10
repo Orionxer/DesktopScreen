@@ -44,13 +44,21 @@ void app_main(void)
     // display_task_init();
     // // buzzer_init();
     flash_init();
-    flash_write_single_wifi("VTK", "AA12345678@");
     // flash_erase_all();
     wifi_init_station();
+    wifi_test_flash();
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
-        wifi_test_flash();
+        // wifi_test_flash();
+        if (wifi_read_state())
+        {
+            wifi_read_rssi();
+        }
+        else
+        {
+            // DBG_LOGW("WiFi Disconnected...");
+        }
         // get_ft6336_touch_sta(&position);
         // test_toggle_pin();
         // print_task_stack_info();
