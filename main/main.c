@@ -18,6 +18,7 @@
 #include "screen.h"
 #include "buzzer.h"
 #include "display.h"
+#include "wifi_station.h"
 
 /******************************************************
  * @brief   VSCode ESP-IDF 环境注意事项
@@ -40,10 +41,12 @@ void app_main(void)
     // touch_ft6336_init();
     // screen_init();
     // display_task_init();
-    buzzer_init();
+    // buzzer_init();
+    wifi_init_station();
     while (1)
     {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        wifi_read_rssi();
         // get_ft6336_touch_sta(&position);
         // test_toggle_pin();
         // print_task_stack_info();
