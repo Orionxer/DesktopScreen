@@ -9,13 +9,6 @@
 #include "flash.h"
 #include "debug_log.h"
 
-typedef struct
-{
-    uint8_t saved_flag;
-    char ssid[32];
-    char password[64];
-}stc_wifi_t;
-
 stc_wifi_t wifi_info = {0};
 
 
@@ -73,7 +66,7 @@ uint8_t flash_read_single_wifi(void)
             // DBG_LOGD("Done");
             break;
         case ESP_ERR_NVS_NOT_FOUND:
-            DBG_LOGW("No WiFi Information Storaged...");
+            DBG_LOGW("No WiFi Information Storaged(Not Initialized Yet)");
             return false;
         default:
             DBG_LOGE("Error (%s) reading!", esp_err_to_name(err));
@@ -93,6 +86,11 @@ uint8_t flash_read_single_wifi(void)
     }
     nvs_close(nvs_handle);
     return wifi_info.saved_flag;
+}
+
+stc_wifi_t get_wifi_info(void)
+{
+    return wifi_info;
 }
 
 void flash_erase_all(void)

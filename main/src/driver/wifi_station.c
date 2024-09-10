@@ -13,6 +13,7 @@
 
 #include "wifi_station.h"
 #include "debug_log.h"
+#include "flash.h"
 
 // ** 重连5次依然连不上，需要检查SSID和Password是否正确 或 WIFI距离太远 或 加密方式不对(比如WPA3)
 // WiFi最大重连次数
@@ -72,8 +73,8 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
 
 void wifi_init_station(void)
 {
-    /**********************************************************************/
-    // TODO 合并nvs分支后替换该部分
+    // [x] 合并nvs分支后替换该部分
+#if 0
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -82,7 +83,7 @@ void wifi_init_station(void)
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-    /**********************************************************************/
+#endif
     DBG_LOGD("Initializing WiFi Station");
 
     s_wifi_event_group = xEventGroupCreate();
@@ -107,49 +108,7 @@ void wifi_init_station(void)
                                                         &event_handler,
                                                         NULL,
                                                         &instance_got_ip));
-
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = WIFI_EXAMPLE_SSID,
-            .password = WIFI_EXAMPLE_PASSWORD,
-            /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
-             * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
-             * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
-             * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
-             */
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-            .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
-            .sae_h2e_identifier = "",
-        },
-    };
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
     DBG_LOGD("wifi_init_sta finished.");
-
-    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
-     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE,
-                                           pdFALSE,
-                                           portMAX_DELAY);
-
-    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
-     * happened. */
-    if (bits & WIFI_CONNECTED_BIT)
-    {
-        DBG_LOGI("connected to ap SSID:%s password:%s", WIFI_EXAMPLE_SSID, WIFI_EXAMPLE_PASSWORD);
-    }
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        DBG_LOGW("Failed to connect to SSID:%s, password:%s", WIFI_EXAMPLE_SSID, WIFI_EXAMPLE_PASSWORD);
-    }
-    else
-    {
-        DBG_LOGE("UNEXPECTED EVENT");
-    }
 }
 
 // WIFI信号强度
@@ -190,5 +149,67 @@ void wifi_read_rssi(void)
     else
     {
         DBG_LOGW("Failed to Read RSSI");
+    }
+}
+
+uint8_t wifi_connect(char *ssid, char *password)
+{
+    DBG_LOGD("WiFi Connecting");
+    wifi_config_t wifi_config = {0};
+    strcpy((char *)wifi_config.sta.ssid, ssid);
+    strcpy((char *)wifi_config.sta.password, password);
+    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    wifi_config.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
+    strcpy((char *)wifi_config.sta.sae_h2e_identifier, "");
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
+     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                           pdFALSE,
+                                           pdFALSE,
+                                           portMAX_DELAY);
+
+    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
+     * happened. */
+    if (bits & WIFI_CONNECTED_BIT)
+    {
+        DBG_LOGI("connected to ap SSID:%s password:%s", WIFI_EXAMPLE_SSID, WIFI_EXAMPLE_PASSWORD);
+        return 1;
+    }
+    else if (bits & WIFI_FAIL_BIT)
+    {
+        DBG_LOGW("Failed to connect to SSID:%s, password:%s", WIFI_EXAMPLE_SSID, WIFI_EXAMPLE_PASSWORD);
+    }
+    else
+    {
+        DBG_LOGE("UNEXPECTED EVENT");
+    }
+    return 0;
+}
+
+void wifi_disconnect(void)
+{
+    DBG_LOGD("WiFi Disconnecting");
+    esp_wifi_disconnect();
+}
+
+void wifi_test_flash(void)
+{
+    // 尝试读取Flash WiFi信息
+    if (flash_read_single_wifi())
+    {
+        stc_wifi_t wifi = get_wifi_info();
+        // DBG_LOGI("SSID = %s, Password = %s", wifi.ssid, wifi.password);
+        wifi_connect(wifi.ssid, wifi.password);
+        vTaskDelay(pdMS_TO_TICKS(10000));
+        wifi_disconnect();
+    }
+    else
+    {
+        DBG_LOGW("Empty WiFi, will not connect");
     }
 }

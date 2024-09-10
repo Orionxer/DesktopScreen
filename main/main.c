@@ -44,12 +44,13 @@ void app_main(void)
     // display_task_init();
     // // buzzer_init();
     flash_init();
-    flash_write_single_wifi("My_SSID", "My_SSID");
+    flash_write_single_wifi("VTK", "AA12345678@");
     // flash_erase_all();
     wifi_init_station();
     while (1)
     {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        wifi_test_flash();
         // get_ft6336_touch_sta(&position);
         // test_toggle_pin();
         // print_task_stack_info();
