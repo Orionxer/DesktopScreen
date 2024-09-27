@@ -18,6 +18,7 @@
 #include "screen.h"
 #include "buzzer.h"
 #include "display.h"
+#include "battery.h"
 
 /******************************************************
  * @brief   VSCode ESP-IDF 环境注意事项
@@ -40,7 +41,12 @@ void app_main(void)
     // touch_ft6336_init();
     // screen_init();
     // display_task_init();
-    buzzer_init();
+    // buzzer_init();
+    // 根据分压电阻，ADC采样电压为实际电压的一半
+    uint32_t adc_sample_voltage = 3900 / 2;
+    // 实际情况下，直接传入ADC引脚采样电压
+    uint8_t battery_level = estimate_battery_level(adc_sample_voltage);
+    DBG_LOGI("The Battery Level is about %d%%", battery_level);
     while (1)
     {
         vTaskDelay(100 / portTICK_PERIOD_MS);
